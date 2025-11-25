@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Combinar correspondencia Docs + Sheets</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
+    label { display: block; margin-top: 10px; }
+    input { width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 15px; padding: 8px 14px; }
+    pre { background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Combinar correspondencia Docs + Sheets</h1>
+
+  <p>
+    Introduce los IDs de tu Google Sheet, de tu plantilla de Google Docs y de la carpeta de Drive
+    donde quieres que se guarden los PDFs.
+  </p>
+
+  <form id="mergeForm">
+    <label>
+      ID de Google Sheet:
+      <input type="text" name="sheetId" required placeholder="Ej: 1AbCdEfGhIjKlMnOpQr...">
+    </label>
+
+    <label>
+      ID de plantilla de Google Docs:
+      <input type="text" name="templateId" required placeholder="Ej: 1ZyXwVuTsRqPoNmLk...">
+    </label>
+
+    <label>
+      ID de carpeta de destino (Drive):
+      <input type="text" name="folderId" required placeholder="Ej: 0BxxYYzzAA...">
+    </label>
+
+    <button type="submit">Generar PDFs</button>
+  </form>
+
+  <h2>Resultado</h2>
+  <pre id="result"></pre>
+
+  <script>
+    // Pega aquí la URL de tu Web App de Apps Script
+    const SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyIrlr9szgUJkqIFAowsdQgzpZIenEoE1LK86j5VSrezWiCEG9JJ5Rb9CPbWq8rE4DelA/exec';
+
+    document.getElementById('mergeForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        sheetId: form.sheetId.value.trim(),
+        templateId: form.templateId.value.trim(),
+        folderId: form.folderId.value.trim()
+      };
+
+      const resultPre = document.getElementById('result');
+      resultPre.textContent = 'Procesando...';
+
+      try {
+        const res = await fetch(SCRIPT_WEBAPP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseErr) {
+          throw new Error('Respuesta no válida del servidor: ' + text);
+        }
+
+        if (json.ok) {
+          resultPre.textContent =
+            'Operación completada.\n' +
+            'Documentos generados: ' + (json.result.generated || 0) +
+            '\n\nRevisa la carpeta de Drive cuyo ID pusiste.';
+        } else {
+          resultPre.textContent = 'Error en el servidor:\n' + json.error;
+        }
+      } catch (err) {
+        resultPre.textContent = 'Error al llamar al backend:\n' + err.toString();
+      }
+    });
+  </script>
+</body>
+</html>

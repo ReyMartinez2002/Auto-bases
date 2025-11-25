@@ -42,7 +42,6 @@
   <pre id="result"></pre>
 
   <script>
-    // Aquí va tu URL de la Web App de Apps Script
     const SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyIrlr9szgUJkqIFAowsdQgzpZIenEoE1LK86j5VSrezWiCEG9JJ5Rb9CPbWq8rE4DelA/exec';
 
     document.getElementById('mergeForm').addEventListener('submit', async (e) => {
@@ -58,13 +57,18 @@
       resultPre.textContent = 'Procesando...';
 
       try {
+        console.log('Enviando a backend:', SCRIPT_WEBAPP_URL, data);
         const res = await fetch(SCRIPT_WEBAPP_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          // IMPORTANTE: no ponemos "mode: 'no-cors'" porque no veríamos la respuesta
           body: JSON.stringify(data)
         });
 
+        console.log('Status:', res.status, res.statusText);
         const text = await res.text();
+        console.log('Respuesta texto:', text);
+
         let json;
         try {
           json = JSON.parse(text);
@@ -81,6 +85,7 @@
           resultPre.textContent = 'Error en el servidor:\n' + json.error;
         }
       } catch (err) {
+        console.error('Error en fetch:', err);
         resultPre.textContent = 'Error al llamar al backend:\n' + err.toString();
       }
     });
